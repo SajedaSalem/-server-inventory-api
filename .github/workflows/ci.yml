@@ -17,8 +17,22 @@ jobs:
 
     steps:
       - name: Printing
-        run: echo "studying CI/CD"
+        run: echo "studying CI/CD"          #run: Executes a shell command
     
+      - name: Check out code
+        uses: actions/checkout@v4
 
+      - name: Install Python
+        uses: actions/setup-python@v5     #use: Use an existing GitHub Action - "actions/checkout" is an action maintained by GitHub that downloads or checks out your repository onto the runner
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      ##remember: the order of steps matters!!! GitHub actions executes the steps from top to bottom.
+      # first we get the project files onto the runner, then we make python available, after that we use "requirements.txt" to install our dependencies.
+      # if we tried to install "requirements.txt" BEFORE checking out the code (getting files onto runner),  GItHub won't be able to find the file.
 
   
