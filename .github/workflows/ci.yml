@@ -1,0 +1,10 @@
+name: CI
+
+jobs: 
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Printing
+        run: echo "studying CI/CD"
+    
