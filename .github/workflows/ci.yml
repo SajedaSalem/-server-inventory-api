@@ -35,4 +35,12 @@ jobs:
       # first we get the project files onto the runner, then we make python available, after that we use "requirements.txt" to install our dependencies.
       # if we tried to install "requirements.txt" BEFORE checking out the code (getting files onto runner),  GItHub won't be able to find the file.
 
-  
+
+      - name: Run linter              # A linter analyzes your source code and looks for things that are potentially wrong /don't follow coding conventions
+        run: flake8 . 
+
+      - name: Run tests
+        run: pytest -q --junitxml=report.xml    # pytest= Runs our project's automated tests / -q= "quiet" - it reduces the output amount that pytest produces / --junitxml=report.xml = tells pytest to run the test and save the result into a file called report.xml
+
+      ## note: If the linter fails, the test step won't run because GitHub Actions normally stops executing following steps after a failed step.
+      # -> makes sense bc. we don't want to call the code "passing" if it doesn't even pass our lint check.
