@@ -67,9 +67,10 @@ jobs:
 
        - name: Start the API
          run: |
-          python app.py &                 
+          APP_VERSION=ci-${{ github.run_number }} python app.py &                 
           sleep 5
 
+        # APP_VERSION sets the API version using the current CI run number.
         # python app.py & = starts the API and lets GitHub move on with the workflow
         # sleep 5 = wait for 5sec, then start sending requests to the server 
       
@@ -81,11 +82,14 @@ jobs:
 
           test "$code" = "200"
 
-        # explanation: Call /healthz, save the returned HTTP status code, display it, and make the step fail if it isn't 200.
-
 
        - name: Check readiness
          run: |
           curl -s http://127.0.0.1:5000/readyz | grep '"servers_loaded":9'
       
-        # explanation: Call /readyz and verify that the response confirms all 9 servers are loaded.
+
+       - name: Check version
+         run: |
+           curl -s http://127.0.0.1:5000/version | grep "ci-${{ github.run_number }}"
+
+        # explanation: Call /version and verify that the response contains the current CI run number.
