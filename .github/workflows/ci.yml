@@ -15,32 +15,33 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:                            # how I want this job to be executed
+      fail-fast: false                   # look at note below
+      matrix:                            # GitHub creates multiple versions of this job based on the values below, and they run IN PARALLEL (instead of creating seperate jobs for each py. version)
+        python-version: ["3.1", "3.12"]  # Make one run for 3.11 and another for 3.12
+
+  ## important matrix concept!!
+  # By default, a matrix can cancel the remaining matrix jobs when one fails. To avoid this -> fail-fast: false
+  #  fail-fast: false = If one version fails, the other must still finish. Do not let GitHub cancel it.
+
     steps:
       - name: Printing
-        run: echo "studying CI/CD"          #run: Executes a shell command
+        run: echo "studying CI/CD"         
     
       - name: Check out code
         uses: actions/checkout@v4
 
       - name: Install Python
-        uses: actions/setup-python@v5     #use: Use an existing GitHub Action - "actions/checkout" is an action maintained by GitHub that downloads or checks out your repository onto the runner
-        with:
-          python-version: "3.12"
-          cache: "pip"
+        uses: actions/setup-python@v5    
+        with: 
+            python-version: ${{ matrix.python-version }}      # gitHub puts the value of this variable, in this case:  matrix.python-version=["3.1", "3.12"] 
+            cache: "pip"
       
       - name: Install dependencies
         run: pip install -r requirements.txt
-      
-      ##remember: the order of steps matters!!! GitHub actions executes the steps from top to bottom.
-      # first we get the project files onto the runner, then we make python available, after that we use "requirements.txt" to install our dependencies.
-      # if we tried to install "requirements.txt" BEFORE checking out the code (getting files onto runner),  GItHub won't be able to find the file.
 
-
-      - name: Run linter              # A linter analyzes your source code and looks for things that are potentially wrong /don't follow coding conventions
+      - name: Run linter             
         run: flake8 . 
 
       - name: Run tests
-        run: pytest -q --junitxml=report.xml    # pytest= Runs our project's automated tests / -q= "quiet" - it reduces the output amount that pytest produces / --junitxml=report.xml = tells pytest to run the test and save the result into a file called report.xml
-
-      ## note: If the linter fails, the test step won't run because GitHub Actions normally stops executing following steps after a failed step.
-      # -> makes sense bc. we don't want to call the code "passing" if it doesn't even pass our lint check.
+        run: pytest -q --junitxml=report.xml   
