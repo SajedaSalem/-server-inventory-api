@@ -43,13 +43,49 @@ jobs:
 
       - name: Upload test report
         if: always()                                 
-        uses: actions/upload-artifact@v4             # We're using GitHub's upload-artifact action. An artifact is basically a file produced during a workflow that you want to save and access later
+        uses: actions/upload-artifact@v4             
         with:
-          name: test-report                          # how we want to name the uploaded artifact
-          path: report.xml                           # tells the action to upload the file called report.xml (remember, pytest creates that file)
+          name: test-report                         
+          path: report.xml                           
 
-          ##why do we need if: always() ?
-          # the "upload  test report"-step comes AFTER the "Runs tests"-step. 
-          # Suppose pytest ("Runs tests"-step) fails -- normally, GitHub won't continue to the upload step. But we want the report specifically when tests fail.
-          # solution ->  if: always() 
-          # if: always() = run the upload step regardless of whether an earlier step failed.
+  smoke: 
+    needs: test                 #dependecy
+    runs-on: ubuntu-latest
+  
+    steps:
+       - name: Check out code
+         uses: actions/checkout@v4
+
+       - name: Set up Python
+         uses: actions/setup-python@v5
+         with:
+          python-version: "3.12"
+          cache: "pip"
+      
+       - name: Install dependencies
+         run: pip install -r requirements.txt
+
+       - name: Start the API
+         run: |
+          python app.py &                 
+          sleep 5
+
+        # python app.py & = starts the API and lets GitHub move on with the workflow
+        # sleep 5 = wait for 5sec, then start sending requests to the server 
+      
+       - name: Check status code
+         run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5000/healthz)
+
+          echo "got $code"
+
+          test "$code" = "200"
+
+        # explanation: Call /healthz, save the returned HTTP status code, display it, and make the step fail if it isn't 200.
+
+
+       - name: Check readiness
+         run: |
+          curl -s http://127.0.0.1:5000/readyz | grep '"servers_loaded":9'
+      
+        # explanation: Call /readyz and verify that the response confirms all 9 servers are loaded.
