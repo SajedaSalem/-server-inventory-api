@@ -15,18 +15,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    strategy:                            # how I want this job to be executed
-      fail-fast: false                   # look at note below
-      matrix:                            # GitHub creates multiple versions of this job based on the values below, and they run IN PARALLEL (instead of creating seperate jobs for each py. version)
-        python-version: ["3.11", "3.12"]  # Make one run for 3.11 and another for 3.12
+    strategy:                            
+      fail-fast: false                   
+      matrix:                           
+        python-version: ["3.11", "3.12"]  
 
-  ## important matrix concept!!
-  # By default, a matrix can cancel the remaining matrix jobs when one fails. To avoid this -> fail-fast: false
-  #  fail-fast: false = If one version fails, the other must still finish. Do not let GitHub cancel it.
 
-    steps:
-      - name: Printing
-        run: echo "studying CI/CD"         
+    steps:        
     
       - name: Check out code
         uses: actions/checkout@v4
@@ -34,7 +29,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v5    
         with: 
-            python-version: ${{ matrix.python-version }}      # gitHub puts the value of this variable, in this case:  matrix.python-version=["3.11", "3.12"] 
+            python-version: ${{ matrix.python-version }}     
             cache: "pip"
       
       - name: Install dependencies
@@ -45,3 +40,16 @@ jobs:
 
       - name: Run tests
         run: pytest -q --junitxml=report.xml   
+
+      - name: Upload test report
+        if: always()                                 
+        uses: actions/upload-artifact@v4             # We're using GitHub's upload-artifact action. An artifact is basically a file produced during a workflow that you want to save and access later
+        with:
+          name: test-report                          # how we want to name the uploaded artifact
+          path: report.xml                           # tells the action to upload the file called report.xml (remember, pytest creates that file)
+
+          ##why do we need if: always() ?
+          # the "upload  test report"-step comes AFTER the "Runs tests"-step. 
+          # Suppose pytest ("Runs tests"-step) fails -- normally, GitHub won't continue to the upload step. But we want the report specifically when tests fail.
+          # solution ->  if: always() 
+          # if: always() = run the upload step regardless of whether an earlier step failed.
