@@ -18,7 +18,7 @@ jobs:
     strategy:                            # how I want this job to be executed
       fail-fast: false                   # look at note below
       matrix:                            # GitHub creates multiple versions of this job based on the values below, and they run IN PARALLEL (instead of creating seperate jobs for each py. version)
-        python-version: ["3.1", "3.12"]  # Make one run for 3.11 and another for 3.12
+        python-version: ["3.11", "3.12"]  # Make one run for 3.11 and another for 3.12
 
   ## important matrix concept!!
   # By default, a matrix can cancel the remaining matrix jobs when one fails. To avoid this -> fail-fast: false
@@ -34,7 +34,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v5    
         with: 
-            python-version: ${{ matrix.python-version }}      # gitHub puts the value of this variable, in this case:  matrix.python-version=["3.1", "3.12"] 
+            python-version: ${{ matrix.python-version }}      # gitHub puts the value of this variable, in this case:  matrix.python-version=["3.11", "3.12"] 
             cache: "pip"
       
       - name: Install dependencies
